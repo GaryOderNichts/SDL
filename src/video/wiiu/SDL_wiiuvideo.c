@@ -59,11 +59,19 @@
 #define DRC_SCREEN_WIDTH    854
 #define DRC_SCREEN_HEIGHT   480
 
+static SDL_bool running = SDL_FALSE;
+
 static int WIIU_ForegroundAcquired(_THIS)
 {
-	WIIU_VideoData *videodata = (WIIU_VideoData *) _this->driverdata;
-	SDL_Window* window = _this->windows;
+	WIIU_VideoData *videodata;
+	SDL_Window* window;
 
+	if (!running) {
+		return 0;
+	}
+
+	videodata = (WIIU_VideoData *) _this->driverdata;
+	window = _this->windows;
 	videodata->hasForeground = SDL_TRUE;
 
 	// initialize gfx heaps once in forground
@@ -112,8 +120,15 @@ static int WIIU_ForegroundAcquired(_THIS)
 
 static int WIIU_ForegroundReleased(_THIS)
 {
-	WIIU_VideoData *videodata = (WIIU_VideoData *) _this->driverdata;
-	SDL_Window* window = _this->windows;
+	WIIU_VideoData *videodata;
+	SDL_Window* window;
+
+	if (!running) {
+		return 0;
+	}
+
+	videodata = (WIIU_VideoData *) _this->driverdata;
+	window = _this->windows;
 
 	// make sure the GPU is done drawing
 	GX2DrawDone();
@@ -215,6 +230,8 @@ static int WIIU_VideoInit(_THIS)
 	ProcUIRegisterCallback(PROCUI_CALLBACK_ACQUIRE, (ProcUICallback) WIIU_ForegroundAcquired, _this, 100);
 	ProcUIRegisterCallback(PROCUI_CALLBACK_RELEASE, (ProcUICallback) WIIU_ForegroundReleased, _this, 100);
 
+	running = SDL_TRUE;
+
 	// if this is running, the application is already in foreground so call the callback
 	if (WIIU_ForegroundAcquired(_this) != 0) {
 		free(videodata->commandBufferPool);
@@ -264,6 +281,8 @@ static void WIIU_VideoQuit(_THIS)
 	if (videodata->handleProcUI) {
 		WHBProcShutdown();
 	}
+
+	running = SDL_FALSE;
 }
 
 static int WIIU_CreateSDLWindow(_THIS, SDL_Window * window)
