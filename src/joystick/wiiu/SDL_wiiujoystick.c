@@ -465,10 +465,12 @@ static void WIIU_JoystickUpdate(SDL_Joystick *joystick)
 		/* touchscreen */
 		VPADGetTPCalibratedPoint(VPAD_CHAN_0, &tpdata, &vpad.tpNormal);
 		if (tpdata.touched) {
-			/* Send an initial touch */
-			SDL_SendTouch(0, 0, NULL, SDL_TRUE,
-					(float) tpdata.x / 1280.0f,
-					(float) tpdata.y / 720.0f, 1);
+			if (!last_touched) {
+				/* Send an initial touch */
+				SDL_SendTouch(0, 0, NULL, SDL_TRUE,
+						(float) tpdata.x / 1280.0f,
+						(float) tpdata.y / 720.0f, 1);
+			}
 
 			/* Always send the motion */
 			SDL_SendTouchMotion(0, 0, NULL,
