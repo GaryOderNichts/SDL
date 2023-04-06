@@ -74,7 +74,7 @@ int SDL_SYS_CreateThread(SDL_Thread *thread)
 
 void SDL_SYS_SetupThread(const char *name)
 {
-    /* Do nothing. */
+    OSSetThreadName(OSGetCurrentThread(), name);
 }
 
 SDL_threadID SDL_ThreadID(void)
