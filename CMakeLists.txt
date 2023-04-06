@@ -223,6 +223,11 @@ if(USE_GCC OR USE_CLANG)
   set(OPT_DEF_GCC_ATOMICS ON)
 endif()
 
+if(WIIU)
+  # Prefer coreinit atomics on Wii U due to a hardware bug in load-exclusive and store-exclusive instructions
+  set(OPT_DEF_GCC_ATOMICS OFF)
+endif()
+
 # Default option knobs
 if(APPLE OR ARCH_64 OR MSVC_CLANG)
   if(NOT "${CMAKE_OSX_ARCHITECTURES}" MATCHES "arm")

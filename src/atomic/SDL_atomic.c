@@ -35,6 +35,10 @@
 #include <atomic.h>
 #endif
 
+#if defined(__WIIU__)
+#include <coreinit/atomic.h>
+#endif
+
 /* The __atomic_load_n() intrinsic showed up in different times for different compilers. */
 #if defined(__clang__)
 #  if __has_builtin(__atomic_load_n) || defined(HAVE_GCC_ATOMICS)
@@ -45,7 +49,7 @@
 #    endif
 #  endif
 #elif defined(__GNUC__)
-#   if (__GNUC__ >= 5)
+#   if (__GNUC__ >= 5) && defined(HAVE_GCC_ATOMICS)
 #     define HAVE_ATOMIC_LOAD_N 1
 #   endif
 #endif
@@ -99,7 +103,7 @@ extern __inline int _SDL_xadd_watcom(volatile int *a, int v);
   Contributed by Bob Pendleton, bob@pendleton.com
 */
 
-#if !defined(HAVE_MSC_ATOMICS) && !defined(HAVE_GCC_ATOMICS) && !defined(__MACOSX__) && !defined(__SOLARIS__) && !defined(HAVE_WATCOM_ATOMICS)
+#if !defined(HAVE_MSC_ATOMICS) && !defined(HAVE_GCC_ATOMICS) && !defined(__MACOSX__) && !defined(__SOLARIS__) && !defined(HAVE_WATCOM_ATOMICS) && !defined(__WIIU__)
 #define EMULATE_CAS 1
 #endif
 
@@ -131,6 +135,8 @@ SDL_AtomicCAS(SDL_atomic_t *a, int oldval, int newval)
     return (_InterlockedCompareExchange((long*)&a->value, (long)newval, (long)oldval) == (long)oldval);
 #elif defined(HAVE_WATCOM_ATOMICS)
     return (SDL_bool) _SDL_cmpxchg_watcom(&a->value, newval, oldval);
+#elif defined(__WIIU__)
+    return OSCompareAndSwapAtomic((volatile uint32_t *)&a->value, (uint32_t)oldval, (uint32_t)newval);
 #elif defined(HAVE_GCC_ATOMICS)
     return (SDL_bool) __sync_bool_compare_and_swap(&a->value, oldval, newval);
 #elif defined(__MACOSX__)  /* this is deprecated in 10.12 sdk; favor gcc atomics. */
@@ -164,6 +170,8 @@ SDL_AtomicCASPtr(void **a, void *oldval, void *newval)
     return (_InterlockedCompareExchangePointer(a, newval, oldval) == oldval);
 #elif defined(HAVE_WATCOM_ATOMICS)
     return (SDL_bool) _SDL_cmpxchg_watcom((int *)a, (long)newval, (long)oldval);
+#elif defined(__WIIU__)
+    return OSCompareAndSwapAtomic((volatile uint32_t *)a, (uint32_t)oldval, (uint32_t)newval);
 #elif defined(HAVE_GCC_ATOMICS)
     return __sync_bool_compare_and_swap(a, oldval, newval);
 #elif defined(__MACOSX__) && defined(__LP64__)  /* this is deprecated in 10.12 sdk; favor gcc atomics. */
@@ -195,6 +203,8 @@ SDL_AtomicSet(SDL_atomic_t *a, int v)
     return _InterlockedExchange((long*)&a->value, v);
 #elif defined(HAVE_WATCOM_ATOMICS)
     return _SDL_xchg_watcom(&a->value, v);
+#elif defined(__WIIU__)
+    return (int) OSSwapAtomic((volatile uint32_t *)&a->value, (uint32_t)v);
 #elif defined(HAVE_GCC_ATOMICS)
     return __sync_lock_test_and_set(&a->value, v);
 #elif defined(__SOLARIS__) && defined(_LP64)
@@ -219,6 +229,8 @@ SDL_AtomicSetPtr(void **a, void *v)
     return _InterlockedExchangePointer(a, v);
 #elif defined(HAVE_WATCOM_ATOMICS)
     return (void *) _SDL_xchg_watcom((int *)a, (long)v);
+#elif defined(__WIIU__)
+    return (void *) OSSwapAtomic((volatile uint32_t *)a, (uint32_t)v);
 #elif defined(HAVE_GCC_ATOMICS)
     return __sync_lock_test_and_set(a, v);
 #elif defined(__SOLARIS__)
@@ -239,6 +251,8 @@ SDL_AtomicAdd(SDL_atomic_t *a, int v)
     return _InterlockedExchangeAdd((long*)&a->value, v);
 #elif defined(HAVE_WATCOM_ATOMICS)
     return _SDL_xadd_watcom(&a->value, v);
+#elif defined(__WIIU__)
+    return OSAddAtomic((volatile int32_t *)&a->value, v);
 #elif defined(HAVE_GCC_ATOMICS)
     return __sync_fetch_and_add(&a->value, v);
 #elif defined(__SOLARIS__)

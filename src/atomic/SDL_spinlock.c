@@ -37,7 +37,8 @@
 #endif
 
 #if defined(__WIIU__)
-#include <stdatomic.h>
+#include <coreinit/cache.h>
+#include <coreinit/atomic.h>
 #endif
 
 #if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
@@ -137,8 +138,7 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
     return (SDL_bool) ((int) atomic_cas_32((volatile uint32_t*)lock, 0, 1) == 0);
 
 #elif defined(__WIIU__)
-    uint64_t val = 0;
-    return (SDL_bool) atomic_compare_exchange_strong((volatile _Atomic uint64_t*)lock, &val, 1);
+    return OSCompareAndSwapAtomic((volatile uint32_t *)lock, 0u, 1u);
 
 #else
 #error Please implement for your platform.
@@ -151,7 +151,7 @@ SDL_AtomicTryLock(SDL_SpinLock *lock)
     #define PAUSE_INSTRUCTION() __asm__ __volatile__("pause\n")  /* Some assemblers can't do REP NOP, so go with PAUSE. */
 #elif (defined(__arm__) && __ARM_ARCH__ >= 7) || defined(__aarch64__)
     #define PAUSE_INSTRUCTION() __asm__ __volatile__("yield" ::: "memory")
-#elif (defined(__powerpc__) || defined(__powerpc64__))
+#elif (defined(__powerpc__) || defined(__powerpc64__)) || defined(__WIIU__)
     #define PAUSE_INSTRUCTION() __asm__ __volatile__("or 27,27,27");
 #elif defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
     #define PAUSE_INSTRUCTION() _mm_pause()  /* this is actually "rep nop" and not a SIMD instruction. No inline asm in MSVC x86-64! */
@@ -202,6 +202,10 @@ SDL_AtomicUnlock(SDL_SpinLock *lock)
     /* Used for Solaris when not using gcc. */
     *lock = 0;
     membar_producer();
+
+#elif defined(__WIIU__)
+    *lock = 0;
+    OSMemoryBarrier();
 
 #else
     *lock = 0;

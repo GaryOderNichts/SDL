@@ -230,6 +230,10 @@ typedef void (*SDL_KernelMemoryBarrierFunc)();
 #include <mbarrier.h>
 #define SDL_MemoryBarrierRelease()  __machine_rel_barrier()
 #define SDL_MemoryBarrierAcquire()  __machine_acq_barrier()
+#elif defined(__WIIU__)
+#include <coreinit/cache.h>
+#define SDL_MemoryBarrierRelease()  OSMemoryBarrier()
+#define SDL_MemoryBarrierAcquire()  OSMemoryBarrier()
 #else
 /* This is correct for the x86 and x64 CPUs, and we'll expand this over time. */
 #define SDL_MemoryBarrierRelease()  SDL_CompilerBarrier()
