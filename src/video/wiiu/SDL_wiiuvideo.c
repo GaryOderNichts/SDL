@@ -40,12 +40,12 @@
 
 #include "../../render/wiiu/SDL_render_wiiu.h"
 
-#include <whb/proc.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
 #include <stdint.h>
 
+#include <coreinit/foreground.h>
 #include <proc_ui/procui.h>
 
 #include <gx2/context.h>
@@ -105,8 +105,7 @@ static int WIIU_ForegroundAcquired(_THIS)
 
 		// Recreate the window texture, now that we have foreground memory available
 		if (renderer) {
-			// TODO
-			//WIIU_SDL_CreateWindowTex(renderer, window);
+			WIIU_SDL_CreateWindowTex(renderer, window);
 		}
 
 		// We're now in foreground, window is visible
@@ -151,7 +150,8 @@ static int WIIU_ForegroundReleased(_THIS)
 
 		// Destroy window texture, we no longer have access to foreground memory
 		if (renderer) {
-			// TODO
+			// TODO this causes crashes on exit for some reason?
+			// Doesn't matter since we destroy the heap anyways ¯\_(ツ)_/¯
 			//WIIU_SDL_DestroyWindowTex(renderer, window);
 		}
 
@@ -165,6 +165,12 @@ static int WIIU_ForegroundReleased(_THIS)
 	return 0;
 }
 
+static uint32_t WiiU_SaveCallback(void * arg)
+{
+	OSSavesDone_ReadyToRelease();
+	return 0;
+}
+
 static int WIIU_VideoInit(_THIS)
 {
 	WIIU_VideoData *videodata = (WIIU_VideoData *) _this->driverdata;
@@ -174,7 +180,7 @@ static int WIIU_VideoInit(_THIS)
 
 	// check if the user already set up procui or if we should handle it
 	if (!ProcUIIsRunning()) {
-		WHBProcInit();
+		ProcUIInitEx(WiiU_SaveCallback, NULL);
 		
 		videodata->handleProcUI = SDL_TRUE;
 	}
@@ -239,8 +245,8 @@ static int WIIU_VideoInit(_THIS)
 		return SDL_OutOfMemory();
 	}
 
-    GX2SetTVScale(videodata->tvWidth, videodata->tvHeight);
-    GX2SetDRCScale(DRC_SCREEN_WIDTH, DRC_SCREEN_HEIGHT);
+	GX2SetTVScale(videodata->tvWidth, videodata->tvHeight);
+	GX2SetDRCScale(DRC_SCREEN_WIDTH, DRC_SCREEN_HEIGHT);
 
 	// add tv display
 	SDL_zero(mode);
@@ -279,7 +285,7 @@ static void WIIU_VideoQuit(_THIS)
 	}
 
 	if (videodata->handleProcUI) {
-		WHBProcShutdown();
+		ProcUIShutdown();
 	}
 
 	running = SDL_FALSE;
@@ -317,8 +323,11 @@ static void WIIU_PumpEvents(_THIS)
 	WIIU_VideoData *videodata = (WIIU_VideoData *) _this->driverdata;
 
 	if (videodata->handleProcUI) {
-		if (!WHBProcIsRunning()) {
+		ProcUIStatus status = ProcUIProcessMessages(TRUE);
+		if (status == PROCUI_STATUS_EXITING) {
 			SDL_SendQuit();
+		} else if (status == PROCUI_STATUS_RELEASE_FOREGROUND) {
+			ProcUIDrawDoneRelease();
 		}
 	}
 }
