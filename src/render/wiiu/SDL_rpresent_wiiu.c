@@ -27,7 +27,6 @@
 #include "../SDL_sysrender.h"
 #include "SDL_render_wiiu.h"
 
-#include <whb/gfx.h>
 #include <gx2/registers.h>
 #include <gx2/state.h>
 #include <gx2/draw.h>
@@ -35,6 +34,8 @@
 #include <gx2/display.h>
 #include <gx2r/buffer.h>
 #include <gx2r/draw.h>
+
+static SDL_bool tvDrcEnabled = SDL_FALSE;
 
 void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
 {
@@ -59,8 +60,11 @@ void WIIU_SDL_RenderPresent(SDL_Renderer * renderer)
     GX2SetContextState(data->ctx);
 
     /* TV and DRC can now be enabled after the first frame was drawn */
-    GX2SetTVEnable(TRUE);
-    GX2SetDRCEnable(TRUE);
+    if (!tvDrcEnabled) {
+        GX2SetTVEnable(TRUE);
+        GX2SetDRCEnable(TRUE);
+        tvDrcEnabled = SDL_TRUE;
+    }
 
     /* Wait for vsync */
     if (renderer->info.flags & SDL_RENDERER_PRESENTVSYNC) {
