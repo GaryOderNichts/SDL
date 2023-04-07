@@ -25,7 +25,7 @@
 
 #if SDL_VIDEO_RENDER_WIIU
 
-#include <whb/gfx.h>
+#include <gx2/shaders.h>
 
 typedef enum {
     SHADER_INVALID = -1,
@@ -34,10 +34,17 @@ typedef enum {
     NUM_SHADERS
 } WIIU_ShaderType;
 
+typedef struct {
+   GX2FetchShader fetchShader;
+   void* fetchShaderProgram;
+   GX2VertexShader* vertexShader;
+   GX2PixelShader* pixelShader;
+} WiiU_ShaderGroup;
+
 void WIIU_SDL_CreateShaders(void);
 void WIIU_SDL_DestroyShaders(void);
 void WIIU_SDL_SelectShader(WIIU_ShaderType shader);
-WHBGfxShaderGroup* WIIU_SDL_GetShaderGroup(WIIU_ShaderType shader);
+WiiU_ShaderGroup* WIIU_SDL_GetShaderGroup(WIIU_ShaderType shader);
 
 #endif /* SDL_VIDEO_RENDER_WIIU */
 

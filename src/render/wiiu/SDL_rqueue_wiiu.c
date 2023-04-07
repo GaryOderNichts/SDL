@@ -269,7 +269,7 @@ static int WIIU_SDL_SetDrawState(WIIU_RenderData * data, const SDL_RenderCommand
     SDL_bool shaderUpdated = SDL_FALSE;
     const SDL_BlendMode blendMode = cmd->data.draw.blend;
     WIIU_ShaderType shader = cmd->data.draw.texture ? SHADER_TEXTURE : SHADER_COLOR;
-    WHBGfxShaderGroup* shaderGroup = WIIU_SDL_GetShaderGroup(shader);
+    WiiU_ShaderGroup* shaderGroup = WIIU_SDL_GetShaderGroup(shader);
     SDL_Texture *texture = cmd->data.draw.texture;
 
     if (data->drawState.viewportDirty) {
