@@ -78,7 +78,6 @@ struct WIIU_DrawState
     int drawableWidth, drawableHeight;
     float projectionMatrix[4][4];
 
-    SDL_bool cliprectEnabledDirty;
     SDL_bool cliprectEnabled;
     SDL_bool cliprectDirty;
     SDL_Rect cliprect;

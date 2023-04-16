@@ -194,8 +194,6 @@ int WIIU_SDL_SetRenderTarget(SDL_Renderer * renderer, SDL_Texture * texture)
     /* Wait for the texture rendering to finish */
     WIIU_TextureCheckWaitRendering(data, tdata);
 
-    data->drawState.viewportDirty = SDL_TRUE;
-
     /* Update context state */
     GX2SetColorBuffer(&tdata->cbuf, GX2_RENDER_TARGET_0);
 
