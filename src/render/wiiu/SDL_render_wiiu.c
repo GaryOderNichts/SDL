@@ -256,7 +256,7 @@ SDL_RenderDriver WIIU_RenderDriver =
     .info = {
         .name = "WiiU GX2",
         .flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_TARGETTEXTURE,
-        .num_texture_formats = 15,
+        .num_texture_formats = 16,
         .texture_formats = {
             SDL_PIXELFORMAT_RGBA8888,
             SDL_PIXELFORMAT_RGBX8888,
@@ -265,6 +265,9 @@ SDL_RenderDriver WIIU_RenderDriver =
             SDL_PIXELFORMAT_RGBA4444,
             SDL_PIXELFORMAT_ABGR4444,
             SDL_PIXELFORMAT_BGRA4444,
+
+            SDL_PIXELFORMAT_RGB565,
+            SDL_PIXELFORMAT_BGR565,
 
             SDL_PIXELFORMAT_ARGB1555,
             SDL_PIXELFORMAT_ABGR1555,
@@ -276,7 +279,8 @@ SDL_RenderDriver WIIU_RenderDriver =
             SDL_PIXELFORMAT_BGRX8888,
             SDL_PIXELFORMAT_ABGR8888,
 
-            SDL_PIXELFORMAT_ARGB2101010,
+            /* SDL currently has a dumbass limit of 16 formats, so this has to be commented-out... */
+            /*SDL_PIXELFORMAT_ARGB2101010,*/
         },
         .max_texture_width = 0,
         .max_texture_height = 0,

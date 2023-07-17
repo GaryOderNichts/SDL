@@ -261,12 +261,12 @@ static inline WIIU_PixFmt WIIU_SDL_GetPixFmt(Uint32 format)
         /* packed16 formats: 565 */
         case SDL_PIXELFORMAT_RGB565: {
             outFmt.fmt = GX2_SURFACE_FORMAT_UNORM_R5_G6_B5;
-            outFmt.compMap = GX2_COMP_MAP(GX2_SQ_SEL_R, GX2_SQ_SEL_G, GX2_SQ_SEL_B, GX2_SQ_SEL_A);
+            outFmt.compMap = GX2_COMP_MAP(GX2_SQ_SEL_B, GX2_SQ_SEL_G, GX2_SQ_SEL_R, GX2_SQ_SEL_1);
             break;
         }
         case SDL_PIXELFORMAT_BGR565: {
             outFmt.fmt = GX2_SURFACE_FORMAT_UNORM_R5_G6_B5;
-            outFmt.compMap = GX2_COMP_MAP(GX2_SQ_SEL_B, GX2_SQ_SEL_G, GX2_SQ_SEL_R, GX2_SQ_SEL_A);
+            outFmt.compMap = GX2_COMP_MAP(GX2_SQ_SEL_R, GX2_SQ_SEL_G, GX2_SQ_SEL_B, GX2_SQ_SEL_1);
             break;
         }
 

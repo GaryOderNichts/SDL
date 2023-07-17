@@ -141,7 +141,8 @@ int WIIU_SDL_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
                         rect->x * BytesPerPixel);
     *pitch = (tdata->texture.surface.pitch * BytesPerPixel);
 
-    /* Not sure we even need to bother keeping track of this */
+    texture->pixels = *pixels;
+    texture->pitch = *pitch;
     texture->locked_rect = *rect;
 
     return 0;
@@ -150,7 +151,28 @@ int WIIU_SDL_LockTexture(SDL_Renderer * renderer, SDL_Texture * texture,
 void WIIU_SDL_UnlockTexture(SDL_Renderer * renderer, SDL_Texture * texture)
 {
     WIIU_TextureData *tdata = (WIIU_TextureData *) texture->driverdata;
+
+    /* The 565 formats need byte-swapping. */
+    if (SDL_PIXELLAYOUT(texture->format) == SDL_PACKEDLAYOUT_565) {
+        Uint8 *pixels_pointer = (Uint8 *)texture->pixels;
+        int x, y;
+
+        for (y = 0; y < texture->locked_rect.h; ++y) {
+            uint16_t* line = (uint16_t*)pixels_pointer;
+
+            for (x = 0; x < texture->locked_rect.w; ++x) {
+                *line = __builtin_bswap16(*line);
+	        ++line;
+            }
+
+            pixels_pointer += texture->pitch;
+        }
+    }
+
     GX2RUnlockSurfaceEx(&tdata->texture.surface, 0, 0);
+
+    /* This needs to be done because 'SDL_DestroyTexture' will try to free this if it's not NULL. */
+    texture->pixels = NULL;
 }
 
 void WIIU_SDL_SetTextureScaleMode(SDL_Renderer * renderer, SDL_Texture * texture, SDL_ScaleMode scaleMode)
