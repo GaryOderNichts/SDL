@@ -381,6 +381,12 @@ int WIIU_SDL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, vo
                 if (SDL_memcmp(viewport, &cmd->data.viewport.rect, sizeof (SDL_Rect)) != 0) {
                     SDL_memcpy(viewport, &cmd->data.viewport.rect, sizeof (SDL_Rect));
                     data->drawState.viewportDirty = SDL_TRUE;
+
+                    if (!data->drawState.cliprectEnabled) {
+                        /* If the clip rect is disabled, then the scissor rect should be the whole viewport */
+                        SDL_memcpy(&data->drawState.cliprect, &data->drawState.viewport, sizeof (SDL_Rect));
+                        data->drawState.cliprectDirty = SDL_TRUE;
+                    }
                 }
                 break;
             }
