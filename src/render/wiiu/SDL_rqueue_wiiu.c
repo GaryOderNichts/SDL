@@ -291,11 +291,12 @@ static int WIIU_SDL_SetDrawState(WIIU_RenderData * data, const SDL_RenderCommand
         const SDL_Rect *viewport = &data->drawState.viewport;
         const SDL_Rect *rect = &data->drawState.cliprect;
 
-        // make sure scissor is never larger than the colorbuffer to prevent memory corruption
-        scissor.x = SDL_clamp(rect->x, 0, viewport->w);
-        scissor.y = SDL_clamp(rect->y, 0, viewport->h);
-        scissor.w = SDL_clamp(rect->w, 0, viewport->w);
-        scissor.h = SDL_clamp(rect->h, 0, viewport->h);
+        /* Make sure scissor is never larger than the colorbuffer to prevent memory corruption.
+           In this case just clamp it to the viewport. */
+        scissor.x = SDL_clamp(viewport->x + rect->x, viewport->x, viewport->x + viewport->w);
+        scissor.y = SDL_clamp(viewport->y + rect->y, viewport->y, viewport->y + viewport->h);
+        scissor.w = SDL_clamp(rect->w, 0, (viewport->x + viewport->w) - scissor.x);
+        scissor.h = SDL_clamp(rect->h, 0, (viewport->y + viewport->h) - scissor.y);
 
         GX2SetScissor(scissor.x, scissor.y, scissor.w, scissor.h);
 
@@ -384,7 +385,10 @@ int WIIU_SDL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, vo
 
                     if (!data->drawState.cliprectEnabled) {
                         /* If the clip rect is disabled, then the scissor rect should be the whole viewport */
-                        SDL_memcpy(&data->drawState.cliprect, &data->drawState.viewport, sizeof (SDL_Rect));
+                        data->drawState.cliprect.x = 0;
+                        data->drawState.cliprect.y = 0;
+                        data->drawState.cliprect.w = viewport->w;
+                        data->drawState.cliprect.h = viewport->h;
                         data->drawState.cliprectDirty = SDL_TRUE;
                     }
                 }
@@ -392,6 +396,8 @@ int WIIU_SDL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, vo
             }
 
             case SDL_RENDERCMD_SETCLIPRECT: {
+                SDL_Rect noclip;
+                const SDL_Rect *viewport = &data->drawState.viewport;
                 const SDL_Rect *rect = &cmd->data.cliprect.rect;
                 if (data->drawState.cliprectEnabled != cmd->data.cliprect.enabled) {
                     data->drawState.cliprectEnabled = cmd->data.cliprect.enabled;
@@ -400,7 +406,11 @@ int WIIU_SDL_RunCommandQueue(SDL_Renderer * renderer, SDL_RenderCommand *cmd, vo
 
                 if (!data->drawState.cliprectEnabled) {
                     /* If the clip rect is disabled, then the scissor rect should be the whole viewport */
-                    rect = &data->drawState.viewport;
+                    noclip.x = 0;
+                    noclip.y = 0;
+                    noclip.w = viewport->w;
+                    noclip.h = viewport->h;
+                    rect = &noclip;
                 }
 
                 if (SDL_memcmp(&data->drawState.cliprect, rect, sizeof (SDL_Rect)) != 0) {
